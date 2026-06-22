@@ -32,7 +32,7 @@
         }
         .mapping-panel {
             flex: 1;
-            max-width: 480px;
+            max-width: 500px;
         }
         label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: bold; color: #b5bac1; }
         
@@ -43,13 +43,46 @@
             text-align: center;
             color: #b5bac1;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             transition: border-color 0.2s;
         }
         .drop-zone:hover, .drop-zone.dragover { border-color: #5865f2; color: #fff; }
         #preview { max-width: 100%; max-height: 120px; display: none; margin-top: 10px; border-radius: 4px; }
         
+        /* 인라인 가이드 스타일 */
+        .inline-guide {
+            background-color: #1e1f22;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .guide-header {
+            color: #f1c40f; font-size: 13px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .guide-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+        .guide-box {
+            background-color: #2b2d31; padding: 12px; border-radius: 4px; text-align: center;
+        }
+        .guide-img-placeholder {
+            width: 100%; height: 110px; background-color: #1e1f22; 
+            border: 1px dashed #4e5058; border-radius: 4px;
+            display: flex; justify-content: center; align-items: center;
+            color: #949ba4; font-size: 11px; margin-bottom: 8px; overflow: hidden; line-height: 1.4;
+        }
+        .guide-img-placeholder img { width: 100%; height: 100%; object-fit: contain; }
+        .badge {
+            display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 8px;
+        }
+        .badge-good { background-color: #23a559; color: white; }
+        .badge-bad { background-color: #da373c; color: white; }
+
         #status { font-size: 14px; color: #f2f3f5; margin-bottom: 12px; font-weight: bold; }
+
+        details { margin-bottom: 16px; background-color: #1e1f22; border-radius: 4px; padding: 10px; }
+        summary { cursor: pointer; font-size: 13px; font-weight: bold; color: #f1c40f; outline: none; }
+        #rawOutput { font-size: 12px; color: #949ba4; white-space: pre-wrap; word-break: break-all; margin-top: 10px; max-height: 100px; overflow-y: auto; }
 
         textarea { 
             width: 100%; height: 80px; background-color: #1e1f22; color: #dbdee1; 
@@ -77,7 +110,7 @@
 
         .mapping-table-container { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; background-color: #1e1f22; font-size: 13px; table-layout: fixed; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2b2d31; overflow: hidden; text-overflow: ellipsis; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2b2d31; }
         th { background-color: #232428; color: #b5bac1; font-weight: bold; position: sticky; top: 0; z-index: 10; }
         input[type="text"] { width: 92%; background: transparent; border: none; color: #dbdee1; font-size: 13px; padding: 2px; }
         input[type="text"]:focus { outline: none; background-color: #2b2d31; border-radius: 2px; }
@@ -94,7 +127,7 @@
 <body>
 
     <h2>플랫폼 통합 AI 랜덤 팀 배분기</h2>
-    <div class="description">이미지 전처리(색상 반전) 알고리즘이 적용되어 다크 모드 스크린샷 인식률이 대폭 향상되었습니다.</div>
+    <div class="description">인식 실패 대응 기능 업데이트 (원시 데이터 확인 및 쉼표 다중 키워드 지원)</div>
     
     <div class="main-layout">
         <div class="panel">
@@ -103,9 +136,37 @@
                 여기를 한 번 클릭하고 Ctrl+V(붙여넣기)를 누르세요.<br>
                 <img id="preview" alt="미리보기">
             </div>
+
+            <div class="inline-guide">
+                <div class="guide-header">📸 AI 인식률 100%를 위한 올바른 캡처 가이드</div>
+                <div style="font-size: 12px; color: #b5bac1; margin-bottom: 12px;">
+                    단축키 [Win + Shift + S]를 눌러 <b>닉네임이 있는 영역만 좁게 드래그</b> 하세요.
+                </div>
+                <div class="guide-grid">
+    			<div class="guide-box">
+        			<span class="badge badge-good">⭕ 올바른 예시</span>
+        			<div class="guide-img-placeholder">
+            				<img src="good.png" alt="올바른 캡처 예시">
+        			</div>
+    			</div>
+    			<div class="guide-box">
+        			<span class="badge badge-bad">❌ 잘못된 예시</span>
+        			<div class="guide-img-placeholder">
+            				<img src="bad.png" alt="잘못된 캡처 예시">
+        			</div>
+    			</div>
+		</div>
+            </div>
+            
             <input type="file" id="fileInput" accept="image/*" style="display:none;">
 
             <div id="status">대기 중...</div>
+
+            <details>
+                <summary>🔍 AI가 읽어들인 원본 텍스트 보기 (디버깅용)</summary>
+                <div style="font-size:11px; color:#b5bac1; margin-top:5px;">기계가 닉네임을 이상하게 읽고 있다면, 아래에 적힌 글자 그대로 우측 테이블에 등록하세요.</div>
+                <pre id="rawOutput">이미지를 분석하면 이곳에 원본 데이터가 표시됩니다.</pre>
+            </details>
             
             <label for="members">2. 식별된 명단 (최종 확인 및 수정)</label>
             <textarea id="members" placeholder="분석 결과가 여기에 출력됩니다. 누락된 인원이 있다면 직접 추가하세요."></textarea>
@@ -119,15 +180,19 @@
 
         <div class="panel mapping-panel">
             <div class="panel-header">
-                <label>⚙️ 인원별 멀티 계정 설정</label>
+                <label>⚙️ 인원별 계정 설정 (쉼표 다중 입력)</label>
                 <button class="btn-sm btn-reset" onclick="resetToDefault()">🔄 기본 명단 초기화</button>
+            </div>
+            <div style="font-size: 11.5px; color: #b5bac1; margin-bottom: 12px; line-height: 1.4;">
+                ※ 인식이 안 되는 글자가 있다면, 확정적으로 인식되는 앞부분만 적거나 쉼표(,)를 사용해 오타 버전을 함께 등록하세요.<br>
+                (예시: <span style="color:#f2f3f5">강아지쉑, 강아지</span> / <span style="color:#f2f3f5">서진석, 서진식</span>)
             </div>
             <div class="mapping-table-container">
                 <table id="mappingTable">
                     <colgroup>
-                        <col style="width: 25%">
+                        <col style="width: 22%">
                         <col style="width: 33%">
-                        <col style="width: 28%">
+                        <col style="width: 31%">
                         <col style="width: 14%">
                     </colgroup>
                     <thead>
@@ -149,31 +214,31 @@
 
     <script>
         const defaultUserDatabase = [
-            { realName: "김민찬", discord: "김민찬", lol: "프레이트" },
-            { realName: "서진석", discord: "서진석", lol: "viduvvur" },
-            { realName: "이호성", discord: "이호성", lol: "Fly My Wings" },
-            { realName: "한지민", discord: "한지민", lol: "BE MY STAR" },
-            { realName: "최민성", discord: "강아지쉑", lol: "고퀄리티만두" },
-            { realName: "한상헌", discord: "민간인 한상헌", lol: "포로황제" },
-            { realName: "홍지석", discord: "민간인 홍지석", lol: "낭만박사김두부" },
-            { realName: "김진한", discord: "진한선배", lol: "이리와서한대만" },
-            { realName: "전영재", discord: "V1 전영재", lol: "SAEZIMA TAIGA" },
-            { realName: "박성주", discord: "민간인 박성주", lol: "머하" },
-            { realName: "김보선", discord: "보선", lol: "생배3" },
-            { realName: "오성인", discord: "상병 오성인", lol: "aegis6219" },
-            { realName: "정태건", discord: "정태건", lol: "태거인" }
+            { realName: "김민찬", discord: "김민찬, zon, 김민, 민찬", lol: "프레이트, 이트, 프레" },
+            { realName: "서진석", discord: "서진석, 서진, Hm, 진석, 진식", lol: "viduvvur, vid" },
+            { realName: "이호성", discord: "이호성, 이호, 호성", lol: "Fly My Wings, Fly" },
+            { realName: "한지민", discord: "한지민, ana, 지민, 한지", lol: "BE MY STAR, STAR" },
+            { realName: "최민성", discord: "강아지쉑, 강아지, 강아, 시크, 강아, zona", lol: "고퀄리티만두, 만두" },
+            { realName: "한상헌", discord: "민간인 한상헌, 한상, 상헌, 상힌", lol: "포로황제, 포로" },
+            { realName: "홍지석", discord: "민간인 홍지석, 홍지석, 홍지, 지석", lol: "낭만박사김두부, 낭만, 박사, 김두부" },
+            { realName: "김진한", discord: "진한선배, 진한, 선배, 한선, EER", lol: "이리와서한대만,이리, 와서, 한대만" },
+            { realName: "전영재", discord: "V1 전영재, 전영재, 영재, 전영", lol: "SAEZIMA TAIGA, SAE, ZIMA, TAI, GA" },
+            { realName: "박성주", discord: "민간인 박성주, 박성주", lol: "머하" },
+            { realName: "김보선", discord: "보선", lol: "생배3, 배3" },
+            { realName: "오성인", discord: "상병 오성인, 오성인", lol: "aegis6219, 6219" },
+            { realName: "정태건", discord: "정태건", lol: "태거인, 거인, 태거" }
         ];
 
         let userDatabase = [];
 
         window.onload = function() {
             try {
-                const saved = localStorage.getItem('multi_platform_mapping_v5');
+                const saved = localStorage.getItem('multi_platform_mapping_v6');
                 if (saved) {
                     userDatabase = JSON.parse(saved);
                 } else {
                     userDatabase = [...defaultUserDatabase];
-                    localStorage.setItem('multi_platform_mapping_v5', JSON.stringify(userDatabase));
+                    localStorage.setItem('multi_platform_mapping_v6', JSON.stringify(userDatabase));
                 }
             } catch (error) {
                 userDatabase = [...defaultUserDatabase];
@@ -183,9 +248,9 @@
         };
 
         function resetToDefault() {
-            if(confirm("기본 13명 명단으로 초기화하시겠습니까?")) {
+            if(confirm("기본 명단으로 초기화하시겠습니까?")) {
                 userDatabase = [...defaultUserDatabase];
-                try { localStorage.setItem('multi_platform_mapping_v5', JSON.stringify(userDatabase)); } catch(e) {}
+                try { localStorage.setItem('multi_platform_mapping_v6', JSON.stringify(userDatabase)); } catch(e) {}
                 renderMappingTable();
             }
         }
@@ -202,9 +267,9 @@
             const body = document.getElementById('mappingBody');
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><input type="text" class="input-real" value="${real}" placeholder="이름"></td>
-                <td><input type="text" class="input-dc" value="${dc}" placeholder="디코닉"></td>
-                <td><input type="text" class="input-lol" value="${lol}" placeholder="롤닉"></td>
+                <td><input type="text" class="input-real" value="${real}"></td>
+                <td><input type="text" class="input-dc" value="${dc}"></td>
+                <td><input type="text" class="input-lol" value="${lol}"></td>
                 <td><button class="btn-sm btn-del" onclick="this.closest('tr').remove()">삭제</button></td>
             `;
             body.appendChild(row);
@@ -221,8 +286,8 @@
             });
             userDatabase = newDatabase;
             try {
-                localStorage.setItem('multi_platform_mapping_v5', JSON.stringify(userDatabase));
-                alert('명단이 저장되었습니다.');
+                localStorage.setItem('multi_platform_mapping_v6', JSON.stringify(userDatabase));
+                alert('저장 완료되었습니다.');
             } catch (error) {}
         }
 
@@ -249,12 +314,10 @@
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                // UI용 원본 이미지 출력
                 const img = document.getElementById('preview');
                 img.src = e.target.result;
                 img.style.display = 'block';
 
-                // OCR 인식률 향상을 위한 캔버스 이미지 전처리 (색상 반전 및 흑백화)
                 const tempImg = new Image();
                 tempImg.onload = () => {
                     const canvas = document.createElement('canvas');
@@ -266,15 +329,12 @@
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
                     
-                    // 픽셀 단위 조작: Dark Mode -> Light Mode 강제 변환
                     for (let i = 0; i < data.length; i += 4) {
-                        data[i] = 255 - data[i];       // Red 반전
-                        data[i+1] = 255 - data[i+1];   // Green 반전
-                        data[i+2] = 255 - data[i+2];   // Blue 반전
+                        data[i] = 255 - data[i];
+                        data[i+1] = 255 - data[i+1];
+                        data[i+2] = 255 - data[i+2];
                     }
                     ctx.putImageData(imageData, 0, 0);
-                    
-                    // 전처리된 이미지를 OCR 엔진으로 전송
                     processOCR(canvas.toDataURL('image/png'));
                 };
                 tempImg.src = e.target.result;
@@ -285,15 +345,17 @@
         async function processOCR(processedImageDataURL) {
             const statusDiv = document.getElementById('status');
             const shuffleBtn = document.getElementById('shuffleBtn');
-            statusDiv.innerHTML = "⏳ 색상 반전 처리 완료. 텍스트 추출 중... (약 5초 소요)";
+            const rawOutput = document.getElementById('rawOutput');
+            statusDiv.innerHTML = "⏳ 색상 반전 완료. 텍스트 추출 중... (약 5~10초 소요)";
             shuffleBtn.disabled = true;
 
             try {
                 const worker = await Tesseract.createWorker('kor+eng');
-                // 전처리된 데이터 URL을 인식
                 const ret = await worker.recognize(processedImageDataURL);
                 await worker.terminate();
 
+                rawOutput.innerText = ret.data.text;
+                
                 matchMultiIdentities(ret.data.text);
             } catch (error) {
                 console.error(error);
@@ -307,16 +369,24 @@
             const textarea = document.getElementById('members');
             const shuffleBtn = document.getElementById('shuffleBtn');
 
-            // 특수문자 및 공백을 모두 제거하여 매칭 관대함(Tolerance) 확보
             const lines = ocrText.split('\n').map(l => l.replace(/[^a-zA-Z가-힣0-9]/g, '')).filter(l => l.length > 0);
             let detectedPeople = new Set();
 
             userDatabase.forEach(user => {
-                const cleanDc = user.discord.replace(/[^a-zA-Z가-힣0-9]/g, '');
-                const cleanLol = user.lol.replace(/[^a-zA-Z가-힣0-9]/g, '');
+                const dcAliases = user.discord.split(',').map(s => s.replace(/[^a-zA-Z가-힣0-9]/g, ''));
+                const lolAliases = user.lol.split(',').map(s => s.replace(/[^a-zA-Z가-힣0-9]/g, ''));
 
                 for (let line of lines) {
-                    if ((cleanDc && line.includes(cleanDc)) || (cleanLol && line.includes(cleanLol))) {
+                    let matched = false;
+                    
+                    for (let dc of dcAliases) {
+                        if (dc && line.includes(dc)) matched = true;
+                    }
+                    for (let lol of lolAliases) {
+                        if (lol && line.includes(lol)) matched = true;
+                    }
+
+                    if (matched) {
                         detectedPeople.add(user.realName);
                         break; 
                     }
@@ -327,10 +397,10 @@
 
             if (finalMembers.length > 0) {
                 textarea.value = finalMembers.join(', ');
-                statusDiv.innerHTML = `✅ 매칭 완료: 총 ${finalMembers.length}명 확보. (누락 시 직접 기입하세요)`;
+                statusDiv.innerHTML = `✅ 매칭 완료: 총 ${finalMembers.length}명 확보.`;
             } else {
                 textarea.value = '';
-                statusDiv.innerHTML = "⚠️ 매칭 실패: 텍스트를 찾지 못했습니다.";
+                statusDiv.innerHTML = "⚠️ 매칭 실패: 데이터베이스와 일치하는 텍스트가 없습니다.";
             }
             shuffleBtn.disabled = false;
         }
@@ -371,7 +441,7 @@
         function copyResults() {
             if (!window.clipboardText) return;
             navigator.clipboard.writeText(window.clipboardText).then(() => {
-                alert('복사되었습니다.');
+                alert('결과 복사 완료!');
             }).catch(err => {
                 alert('드래그해서 복사해주세요.');
             });
