@@ -1,105 +1,369 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>롤/디코 통합 멀티 닉네임 랜덤 팀 배분 시스템</title>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-body {
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-background-color: #2b2d31;
-color: #dbdee1;
-padding: 30px 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
-}
-h2 { color: #ffffff; margin-bottom: 5px; }
-.description { color: #b5bac1; font-size: 13px; margin-bottom: 25px; text-align: center; }
-.main-layout {
-display: flex;
-gap: 24px;
-width: 100%;
-max-width: 1100px;
-}
-.panel {
-background-color: #313338;
-padding: 24px;
-border-radius: 8px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-flex: 1.2;
-}
-.mapping-panel {
-flex: 1;
-max-width: 480px;
-}
-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: bold; color: #b5bac1; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>롤/디코 통합 멀티 닉네임 랜덤 팀 배분 시스템</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #2b2d31; 
+            color: #dbdee1; 
+            padding: 30px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        h2 { color: #ffffff; margin-bottom: 5px; }
+        .description { color: #b5bac1; font-size: 13px; margin-bottom: 25px; text-align: center; }
+        .main-layout {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            max-width: 1100px;
+        }
+        .panel {
+            background-color: #313338; 
+            padding: 24px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            flex: 1.2;
+        }
+        .mapping-panel {
+            flex: 1;
+            max-width: 480px;
+        }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: bold; color: #b5bac1; }
+        
+        .drop-zone {
+            border: 2px dashed #4e5058;
+            border-radius: 6px;
+            padding: 25px;
+            text-align: center;
+            color: #b5bac1;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #5865f2; color: #fff; }
+        #preview { max-width: 100%; max-height: 120px; display: none; margin-top: 10px; border-radius: 4px; }
+        
+        #status { font-size: 14px; color: #f2f3f5; margin-bottom: 12px; font-weight: bold; }
 
-.drop-zone {
-border: 2px dashed #4e5058;
-border-radius: 6px;
-padding: 25px;
-text-align: center;
-color: #b5bac1;
-cursor: pointer;
-margin-bottom: 16px;
-transition: border-color 0.2s;
-}
-.drop-zone:hover, .drop-zone.dragover { border-color: #5865f2; color: #fff; }
-#preview { max-width: 100%; max-height: 120px; display: none; margin-top: 10px; border-radius: 4px; }
+        textarea { 
+            width: 100%; height: 80px; background-color: #1e1f22; color: #dbdee1; 
+            border: 1px solid #1e1f22; padding: 12px; border-radius: 4px; resize: none; 
+            margin-bottom: 16px; box-sizing: border-box; font-size: 15px;
+        }
+        textarea:focus { outline: none; border-color: #5865f2; }
+        
+        button { 
+            width: 100%; padding: 12px; border: none; border-radius: 4px; 
+            font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 12px; 
+            transition: background-color 0.2s; 
+        }
+        .btn-blue { background-color: #5865f2; color: white; }
+        .btn-blue:hover { background-color: #4752c4; }
+        .btn-blue:disabled { background-color: #4e5058; color: #80848e; cursor: not-allowed; }
+        .btn-green { background-color: #23a559; color: white; display: none; }
+        .btn-green:hover { background-color: #1a7c43; }
 
-#status { font-size: 14px; color: #f2f3f5; margin-bottom: 12px; font-weight: bold; }
+        .result-area { margin: 20px 0; display: flex; gap: 12px; }
+        .team { background-color: #2b2d31; padding: 16px; border-radius: 6px; flex: 1; }
+        .team h3 { margin-top: 0; color: #f2f3f5; border-bottom: 1px solid #3f4147; padding-bottom: 8px; font-size: 16px; }
+        .member-list { list-style: none; padding: 0; margin: 0; }
+        .member-list li { padding: 6px 0; font-size: 15px; }
 
-textarea {
-width: 100%; height: 80px; background-color: #1e1f22; color: #dbdee1;
-border: 1px solid #1e1f22; padding: 12px; border-radius: 4px; resize: none;
-margin-bottom: 16px; box-sizing: border-box; font-size: 15px;
-}
-textarea:focus { outline: none; border-color: #5865f2; }
-
-button {
-width: 100%; padding: 12px; border: none; border-radius: 4px;
-font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 12px;
-transition: background-color 0.2s;
-}
-.btn-blue { background-color: #5865f2; color: white; }
-.btn-blue:hover { background-color: #4752c4; }
-.btn-blue:disabled { background-color: #4e5058; color: #80848e; cursor: not-allowed; }
-.btn-green { background-color: #23a559; color: white; display: none; }
-.btn-green:hover { background-color: #1a7c43; }
-
-.result-area { margin: 20px 0; display: flex; gap: 12px; }
-.team { background-color: #2b2d31; padding: 16px; border-radius: 6px; flex: 1; }
-.team h3 { margin-top: 0; color: #f2f3f5; border-bottom: 1px solid #3f4147; padding-bottom: 8px; font-size: 16px; }
-.member-list { list-style: none; padding: 0; margin: 0; }
-.member-list li { padding: 6px 0; font-size: 15px; }
-
-.mapping-table-container { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
-table { width: 100%; border-collapse: collapse; background-color: #1e1f22; font-size: 13px; table-layout: fixed; }
-th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2b2d31; overflow: hidden; text-overflow: ellipsis; }
-th { background-color: #232428; color: #b5bac1; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-input[type="text"] { width: 92%; background: transparent; border: none; color: #dbdee1; font-size: 13px; padding: 2px; }
-input[type="text"]:focus { outline: none; background-color: #2b2d31; border-radius: 2px; }
-.btn-sm { padding: 4px 6px; font-size: 11px; width: auto; margin: 0; border: none; border-radius: 3px; cursor: pointer; }
-.btn-del { background-color: #da373c; color: white; }
-.btn-del:hover { background-color: #a92b2f; }
-.btn-reset { background-color: #4e5058; color: white; padding: 6px 10px; margin-top: 5px; float: right; }
-.btn-reset:hover { background-color: #3f4147; }
-.btn-add { background-color: #248046; color: white; padding: 8px; font-size: 13px; margin-top: 5px; }
-.btn-add:hover { background-color: #1a6535; }
-.panel-header { display: flex; justify-content: space-between; align-items: flex-start; }
-</style>
+        .mapping-table-container { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; background-color: #1e1f22; font-size: 13px; table-layout: fixed; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2b2d31; overflow: hidden; text-overflow: ellipsis; }
+        th { background-color: #232428; color: #b5bac1; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        input[type="text"] { width: 92%; background: transparent; border: none; color: #dbdee1; font-size: 13px; padding: 2px; }
+        input[type="text"]:focus { outline: none; background-color: #2b2d31; border-radius: 2px; }
+        .btn-sm { padding: 4px 6px; font-size: 11px; width: auto; margin: 0; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-del { background-color: #da373c; color: white; }
+        .btn-del:hover { background-color: #a92b2f; }
+        .btn-reset { background-color: #4e5058; color: white; padding: 6px 10px; margin-top: 5px; float: right; }
+        .btn-reset:hover { background-color: #3f4147; }
+        .btn-add { background-color: #248046; color: white; padding: 8px; font-size: 13px; margin-top: 5px; }
+        .btn-add:hover { background-color: #1a6535; }
+        .panel-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    </style>
 </head>
 <body>
 
-<h2>플랫폼 통합 AI 랜덤 팀 배분기</h2>
-<div class="description">디스코드나 롤 대기방 스크린샷 중 아무거나 올려도 등록된 닉네임을 추적하여 실제 이름으로 팀을 빌드합니다.</div>
+    <h2>플랫폼 통합 AI 랜덤 팀 배분기</h2>
+    <div class="description">디스코드나 롤 대기방 스크린샷 중 아무거나 올려도 등록된 닉네임을 추적하여 실제 이름으로 팀을 빌드합니다.</div>
+    
+    <div class="main-layout">
+        <div class="panel">
+            <label>1. 스크린샷 입력 (영역 캡처 후 이 화면에 Ctrl+V)</label>
+            <div id="dropZone" class="drop-zone">
+                여기를 한 번 클릭하고 Ctrl+V(붙여넣기)를 누르세요.<br>
+                <img id="preview" alt="미리보기">
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
 
-<div class="main-layout">
-<div class="panel">
-<label>1. 스크린샷 입력 (드래그앤드롭 또는 영역 캡처 후 Ctrl+V)</label>
-<div id="dropZone" class="drop-zone">
+            <div id="status">대기 중...</div>
+            
+            <label for="members">2. 식별된 명단 (최종 확인 및 수정)</label>
+            <textarea id="members" placeholder="이미지 분석 결과가 여기에 출력됩니다. 필요 시 직접 편집 가능합니다."></textarea>
+            
+            <button id="shuffleBtn" class="btn-blue" onclick="generateTeams()">🎲 무작위 팀 배정</button>
+            
+            <div id="result" class="result-area"></div>
+            
+            <button id="copyBtn" class="btn-green" onclick="copyResults()">📋 결과 텍스트 복사</button>
+        </div>
+
+        <div class="panel mapping-panel">
+            <div class="panel-header">
+                <label>⚙️ 인원별 멀티 계정 설정</label>
+                <button class="btn-sm btn-reset" onclick="resetToDefault()">🔄 기본 명단 초기화</button>
+            </div>
+            <div class="mapping-table-container">
+                <table id="mappingTable">
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 33%">
+                        <col style="width: 28%">
+                        <col style="width: 14%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>실제 이름</th>
+                            <th>디코 닉네임</th>
+                            <th>롤 닉네임</th>
+                            <th>삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mappingBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addMappingRow('', '', '')">➕ 신규 인원 등록</button>
+            <button class="btn-blue" style="background-color: #4e5058; margin-top: 5px;" onclick="saveMapping()">💾 변경사항 저장</button>
+        </div>
+    </div>
+
+    <script>
+        const defaultUserDatabase = [
+            { realName: "김민찬", discord: "김민찬", lol: "프레이트" },
+            { realName: "서진석", discord: "서진석", lol: "viduvvur" },
+            { realName: "이호성", discord: "이호성", lol: "Fly My Wings" },
+            { realName: "한지민", discord: "한지민", lol: "BE MY STAR" },
+            { realName: "최민성", discord: "강아지쉑", lol: "고퀄리티만두" },
+            { realName: "한상헌", discord: "민간인 한상헌", lol: "포로황제" },
+            { realName: "홍지석", discord: "민간인 홍지석", lol: "낭만박사김두부" },
+            { realName: "김진한", discord: "진한선배", lol: "이리와서한대만" },
+            { realName: "전영재", discord: "V1 전영재", lol: "SAEZIMA TAIGA" },
+            { realName: "박성주", discord: "민간인 박성주", lol: "머하" },
+            { realName: "김보선", discord: "보선", lol: "생배3" },
+            { realName: "오성인", discord: "상병 오성인", lol: "aegis6219" },
+            { realName: "정태건", discord: "정태건", lol: "태거인" }
+        ];
+
+        let userDatabase = [];
+
+        // 보안 정책으로 인한 에러 방지 처리 추가
+        window.onload = function() {
+            try {
+                const saved = localStorage.getItem('multi_platform_mapping_v4');
+                if (saved) {
+                    userDatabase = JSON.parse(saved);
+                } else {
+                    userDatabase = [...defaultUserDatabase];
+                    localStorage.setItem('multi_platform_mapping_v4', JSON.stringify(userDatabase));
+                }
+            } catch (error) {
+                console.warn("브라우저 보안 설정으로 로컬 저장소가 차단되었습니다. 기본 데이터를 사용합니다.");
+                userDatabase = [...defaultUserDatabase];
+            }
+            
+            renderMappingTable();
+            setupImageEvents();
+        };
+
+        function resetToDefault() {
+            if(confirm("저장된 명단을 삭제하고 코드로 작성된 13명 명단으로 초기화하시겠습니까?")) {
+                userDatabase = [...defaultUserDatabase];
+                try {
+                    localStorage.setItem('multi_platform_mapping_v4', JSON.stringify(userDatabase));
+                } catch(e) {}
+                renderMappingTable();
+            }
+        }
+
+        function renderMappingTable() {
+            const body = document.getElementById('mappingBody');
+            body.innerHTML = '';
+            userDatabase.forEach(user => {
+                addMappingRow(user.realName, user.discord, user.lol);
+            });
+        }
+
+        function addMappingRow(real, dc, lol) {
+            const body = document.getElementById('mappingBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="input-real" value="${real}" placeholder="이름"></td>
+                <td><input type="text" class="input-dc" value="${dc}" placeholder="디코닉"></td>
+                <td><input type="text" class="input-lol" value="${lol}" placeholder="롤닉"></td>
+                <td><button class="btn-sm btn-del" onclick="this.closest('tr').remove()">삭제</button></td>
+            `;
+            body.appendChild(row);
+        }
+
+        function saveMapping() {
+            const rows = document.querySelectorAll('#mappingBody tr');
+            const newDatabase = [];
+            
+            rows.forEach(row => {
+                const real = row.querySelector('.input-real').value.trim();
+                const dc = row.querySelector('.input-dc').value.trim();
+                const lol = row.querySelector('.input-lol').value.trim();
+                
+                if (real) { 
+                    newDatabase.push({ realName: real, discord: dc, lol: lol });
+                }
+            });
+            
+            userDatabase = newDatabase;
+            try {
+                localStorage.setItem('multi_platform_mapping_v4', JSON.stringify(userDatabase));
+                alert('명단이 저장되었습니다.');
+            } catch (error) {
+                alert('브라우저 보안 설정(쿠키 차단 등)으로 인해 명단을 저장할 수 없습니다.\n임시적으로는 문제없이 작동합니다.');
+            }
+        }
+
+        function setupImageEvents() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+
+            dropZone.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => handleImage(e.target.files[0]);
+            
+            // 붙여넣기(Ctrl+V) 감지 로직
+            document.addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) {
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        handleImage(item.getAsFile());
+                        break;
+                    }
+                }
+            });
+        }
+
+        function handleImage(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('preview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+            processOCR(file);
+        }
+
+        async function processOCR(file) {
+            const statusDiv = document.getElementById('status');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            statusDiv.innerHTML = "⏳ OCR 이미지 판독 중... (약 5~10초 소요)";
+            shuffleBtn.disabled = true;
+
+            try {
+                const worker = await Tesseract.createWorker('kor+eng');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+
+                matchMultiIdentities(ret.data.text);
+            } catch (error) {
+                console.error(error);
+                statusDiv.innerHTML = "❌ 인식 오류 발생. F12 콘솔창을 확인하거나 화면을 작게 캡처해 보세요.";
+                shuffleBtn.disabled = false;
+            }
+        }
+
+        function matchMultiIdentities(ocrText) {
+            const statusDiv = document.getElementById('status');
+            const textarea = document.getElementById('members');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+
+            const lines = ocrText.split('\n').map(l => l.replace(/\s+/g, '')).filter(l => l.length > 0);
+            let detectedPeople = new Set();
+
+            userDatabase.forEach(user => {
+                const cleanDc = user.discord.replace(/\s+/g, '');
+                const cleanLol = user.lol.replace(/\s+/g, '');
+
+                for (let line of lines) {
+                    if ((cleanDc && line.includes(cleanDc)) || (cleanLol && line.includes(cleanLol))) {
+                        detectedPeople.add(user.realName);
+                        break; 
+                    }
+                }
+            });
+
+            const finalMembers = Array.from(detectedPeople);
+
+            if (finalMembers.length > 0) {
+                textarea.value = finalMembers.join(', ');
+                statusDiv.innerHTML = `✅ 매칭 성공: 총 ${finalMembers.length}명의 실제 인원을 확보했습니다.`;
+            } else {
+                textarea.value = '';
+                statusDiv.innerHTML = "⚠️ 매칭 실패: 데이터베이스의 닉네임과 일치하는 텍스트가 없습니다.";
+            }
+            shuffleBtn.disabled = false;
+        }
+
+        function generateTeams() {
+            const input = document.getElementById('members').value;
+            let members = input.split(',').map(name => name.trim()).filter(name => name !== '');
+
+            if (members.length < 2) {
+                alert('팀을 나누려면 최소 2명 이상이 필요합니다.');
+                return;
+            }
+
+            for (let i = members.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [members[i], members[j]] = [members[j], members[i]];
+            }
+
+            const midIndex = Math.ceil(members.length / 2);
+            const teamA = members.slice(0, midIndex);
+            const teamB = members.slice(midIndex);
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="team">
+                    <h3>A팀 (${teamA.length}명)</h3>
+                    <ul class="member-list">${teamA.map(m => `<li>${m}</li>`).join('')}</ul>
+                </div>
+                <div class="team">
+                    <h3>B팀 (${teamB.length}명)</h3>
+                    <ul class="member-list">${teamB.map(m => `<li>${m}</li>`).join('')}</ul>
+                </div>
+            `;
+            document.getElementById('copyBtn').style.display = 'block';
+            window.clipboardText = `[A팀] ${teamA.join(', ')}\n[B팀] ${teamB.join(', ')}`;
+        }
+
+        function copyResults() {
+            if (!window.clipboardText) return;
+            navigator.clipboard.writeText(window.clipboardText).then(() => {
+                alert('복사되었습니다.');
+            }).catch(err => {
+                alert('드래그해서 복사해주세요.');
+            });
+        }
+    </script>
+</body>
+</html>
 여기에 이미지를 놓거나 클릭하여 업로드<br>
 <span style="font-size:12px; color:#949ba4;">(디코 명단 또는 롤 대기방 닉네임 영역을 캡처 후 붙여넣기 하세요)</span>
 <img id="preview" alt="미리보기">
